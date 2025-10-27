@@ -1,4 +1,3 @@
-
 //////////////////////
 //##################//
 //##              ##//
@@ -232,24 +231,36 @@ ESerial.setPins(
 
 // initialize
 
-let RESET = false
+let RUN = true
 
-runHandler = () => { // button A pressed
-    RESET = true
+function init() {
+    let str: string
+    do {
+        if (ESerial.available())
+            str = ESerial.read() // did RPI startup ?
+        basic.pause(1)
+    } while (str != "READY")
+    basic.showIcon(IconNames.Heart)
+    basic.pause(1000)
+    ESerial.write("ACK")
 }
-
-let str: string
-do {
-    if (ESerial.available())
-        str = ESerial.read() // did RPI startup ?
-    basic.pause(1)
-} while ((str != "READY") && !RESET)
-basic.showIcon(IconNames.Heart)
+init()
 
 // handle messages
 
+runHandler = () => { // button A pressed
+    RUN = true
+    basic.showIcon(IconNames.Heart)
+}
+
+stopHandler = () => { // button B pressed
+    RUN = false
+    basic.showArrow(ArrowNames.West)
+}
+
 readHandler = () => {
     let msg = ERadio.readMessage()
+    if (!RUN) return
     if (msg.length > 0) {
         basic.showIcon(IconNames.SmallHeart)
         ESerial.write(msg)
